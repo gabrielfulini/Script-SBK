@@ -1,0 +1,80 @@
+--Script-SBK
+
+select * from (
+select d.id_documento, dcp.id_criterio_pesquisa, dcp.conteudo, sum(di.num_paginas) QUANTIDADE_DOCS
+from documento d, documento_criterio_pesquisa dcp, documento_imagem di
+where d.id_Documento = dcp.id_documento 
+and di.id_Documento = d.id_Documento
+and d.id_pessoa = 1010
+and di.id_status = 2801
+and d.id_status not in(1506,1510)
+and d.id_tipo_documento in(3824,
+425)
+group by d.id_documento, dcp.id_criterio_pesquisa, dcp.conteudo)
+PIVOT (MAX (conteudo)
+             FOR (id_criterio_pesquisa)
+             IN (30 CPF, 1601 NOME));
+             
+            
+--qntde imagens por prontuario
+
+/* Formatted on 13/01/2023 10:25:26 (QP5 v5.326) */
+  SELECT d.id_documento,
+         i.descricao,
+         tit.descricao
+             check_list_titulo,
+         DECODE (i.OBRIGATORIO, 1, 'OBRIGATÓRIO', 'NÃO É OBRIGATORIO')
+             IMAGEM_OBRIGATORIA,
+         (SELECT CASE
+                     WHEN COUNT (*) = 0 THEN 'NÃO POSSUI IMAGEM'
+                     ELSE 'POSSUI IMAGEM'
+                 END
+            FROM documento_imagem di
+           WHERE     di.id_documento = d.id_documento
+                 AND di.id_tipo_imagem = i.id_tipo_imagem)
+             POSSUI_IMAGEM,
+         (SELECT dcp.CONTEUDO
+            FROM DOCUMENTO_CRITERIO_PESQUISA DCP
+           WHERE     DCP.ID_DOCUMENTO = D.ID_DOCUMENTO
+                 AND DCP.ID_CRITERIO_PESQUISA = 30)
+             CPF,
+         (SELECT dcp.CONTEUDO
+            FROM DOCUMENTO_CRITERIO_PESQUISA DCP
+           WHERE     DCP.ID_DOCUMENTO = D.ID_DOCUMENTO
+                 AND DCP.ID_CRITERIO_PESQUISA = 315)
+             CPF2,
+         (SELECT dcp.CONTEUDO
+            FROM DOCUMENTO_CRITERIO_PESQUISA DCP
+           WHERE     DCP.ID_DOCUMENTO = D.ID_DOCUMENTO
+                 AND DCP.ID_CRITERIO_PESQUISA = 3540)
+             CPF3,
+         (SELECT dcp.CONTEUDO
+            FROM DOCUMENTO_CRITERIO_PESQUISA DCP
+           WHERE     DCP.ID_DOCUMENTO = D.ID_DOCUMENTO
+                 AND DCP.ID_CRITERIO_PESQUISA = 1601)
+             NOME
+    FROM documento        d,
+         check_list_item  i,
+         check_list_titulo tit,
+         check_list_tipo  tp
+   WHERE     i.id_titulo = tit.id_titulo
+         AND tit.ID_CHECK_LIST_TIPO = tp.ID_CHECK_LIST_TIPO
+         AND tp.id_pessoa = d.id_pessoa
+         AND i.ID_PESSOA = d.ID_PESSOA
+         AND d.id_pessoa = 1010
+         AND D.ID_STATUS <> 1506
+         AND EXISTS
+                 (SELECT 1
+                    FROM DOCUMENTO_CRITERIO_PESQUISA dcp2
+                   WHERE dcp2.ID_DOCUMENTO = d.ID_DOCUMENTO)
+         AND EXISTS
+                 (SELECT 1
+                    FROM DOCUMENTO_IMAGEM di2
+                   WHERE di2.ID_DOCUMENTO = d.ID_DOCUMENTO)
+         --AND d.id_documento = 12382039920
+         AND i.PERIODICIDADE = 0
+         AND i.obrigatorio = 1
+         AND d.ID_DOCUMENTO_SUP IS NULL
+         AND d.id_tipo_documento IN (3824, 425)
+ORDER BY NOME, i.descricao;
+
