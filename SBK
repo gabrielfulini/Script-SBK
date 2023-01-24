@@ -15,7 +15,7 @@ PIVOT (MAX (conteudo)
              FOR (id_criterio_pesquisa)
              IN (30 CPF, 1601 NOME));
              
-            
+___________________________________________________________________________________            
 --qntde imagens por prontuario
 
 /* Formatted on 13/01/2023 10:25:26 (QP5 v5.326) */
@@ -77,4 +77,21 @@ PIVOT (MAX (conteudo)
          AND d.ID_DOCUMENTO_SUP IS NULL
          AND d.id_tipo_documento IN (3824, 425)
 ORDER BY NOME, i.descricao;
+_________________________________________________________________________
 
+Script bruno para validar cpf e matricula no edossier
+
+/* Formatted on 24/01/2023 08:42:38 (QP5 v5.326) */
+  SELECT *
+    FROM (SELECT DOS.IDENTIFICADOR,
+                 DOS.REFERENCIA,
+                 DOS.IDAUXILIAR,
+                 (SELECT COUNT (*)
+                    FROM ED_DOCUMENTOS DOC
+                   WHERE DOC.IDENTIFICADOR = DOS.IDENTIFICADOR
+				   )
+                     TOT_IMAGEM
+            FROM ED_DOSSIES DOS) X
+   WHERE X.TOT_IMAGEM > 0
+  -- AND LEN (x.IDENTIFICADOR) > 8
+ORDER BY X.REFERENCIA;
